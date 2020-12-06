@@ -9,12 +9,11 @@ import numpy as np
 
 # config 
 batch_size = 32
-epochs = 15
-checkpoint_filepath = 'model/val_78.h5'
+epochs = 25
+checkpoint_filepath = 'model/checkpoint.h5'
 metrics = "val_accuracy"
 path = 'fish_dataset'
-retrain_model = False
-reload_weight = True
+retrain_model = True
 logging.basicConfig(level=logging.INFO)
 
 # data split & augmentation
@@ -22,7 +21,7 @@ train_generator, val_generator = load_data(path, split_ratio=0.25)
 log_info(train_generator)
 
 model = cnn_model(val_generator.num_classes)
-if reload_weight:
+if not retrain_model:
     model.load_weights(checkpoint_filepath)
 model.summary()
 
@@ -44,8 +43,8 @@ if retrain_model:
                  callbacks=[checkpoint])
                  
 # reload the model again with best weights
-model.load_weights(checkpoint_filepath)
-result = model.evaluate(val_generator, return_dict=True, verbose=1)
+# model.load_weights(checkpoint_filepath)
+result = model.evaluate(val_generator, return_dict=True, batch_size=1, verbose=1)
 logging.info("Evaluation", result)
 
 # reload the generator again, quick hack. TODO: reset class position back from original generator
@@ -60,7 +59,7 @@ logging.info('\n \n Classification Report \n')
 
 classes = train_generator.class_indices
 label_map = np.array(list(classes.items()))
-label = label_map[:,0].tolist()
+label = label_map[:, 0].tolist()
 target_names = label
 logging.info(classification_report(val_generator.classes, y_pred, target_names=target_names))
 
